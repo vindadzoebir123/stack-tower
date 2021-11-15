@@ -1,7 +1,14 @@
+var myGame;
 window.addEventListener("DOMContentLoaded", function(){
-    new Game('renderCanvas');
+    myGame = new Game('renderCanvas');
 }, false
 );
+
+var RestartScene = function()
+{
+    myGame.scene.dispose();
+    myGame = new Game('renderCanvas');
+}
 
 var Game = function(canvasId)
 {
@@ -27,7 +34,10 @@ var Game = function(canvasId)
 
     this.playerLevel = null;
     this.gameOverStatus = false;
+    this.gameRunning = false;
     this.cameraPovTarget = 0;
+
+    this.gameScore = 0;
 
     this._initGame();
     
@@ -35,28 +45,36 @@ var Game = function(canvasId)
     var _this = this;
     
     this.scene.onPointerDown = function(evt, pickInfo){
-        if(this.gameOverStatus)
+        if(_this.gameOverStatus || !_this.gameRunning)
             return;
         _this.checkStack();
     }
     this.engine.runRenderLoop(() => {
         this.scene.render();
-        this._disableOutline();
-        this.animateGameOver();
+        if(this.gameRunning || !this.gameOver)
+            this._disableOutline();
+        
+
+            this.animateGameOver();
     });
 
-    this.scene.debugLayer.show();
+    // this.scene.debugLayer.show();
 
-    // this.scene.onPointerDown = function(evt, pickInfo){
-    //     // pickInfo.pickedMesh.renderOutline = true;
-    //     // pickInfo.pickedMesh.outlineWidth = 0.05;
-    //     // pickInfo.pickedMesh.outlineColor = BABYLON.Color3.White();
+    this.advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI(
+        "myUI"
+      );
 
-    //     //mouse click object
-    //     // console.log(pickInfo.pickedMesh);
-    //     console.log("Position : " + this.currentStack.position);
-
-    // }
+    var button1 = BABYLON.GUI.Button.CreateSimpleButton("but1", "TAP TO START");
+    button1.width = "300px"
+    button1.height = "80px";
+    button1.color = "white";
+    // button1.cornerRadius = 20;
+    button1.background = "#f67e7d";
+    button1.onPointerUpObservable.add(function() {
+        _this.gameStart();
+        button1.dispose();
+    });
+    this.advancedTexture.addControl(button1);    
 }
 
 Game.prototype._setColor = function()
@@ -158,9 +176,7 @@ Game.prototype._initGame = function(){
     platform.material = this.material;
 
     
-    this.currentStack = this._createStack();
     this.createParticles();
-    this.loadMusic();
     // this.scene.onPointerDown = function(evt, pickInfo){
     //     // pickInfo.pickedMesh.renderOutline = true;
     //     // pickInfo.pickedMesh.outlineWidth = 0.05;
@@ -171,6 +187,31 @@ Game.prototype._initGame = function(){
     //     _this._checkStack();
     // }
     
+}
+
+Game.prototype.gameStart = function()
+{
+    this.gameRunning = true;
+    this.currentStack = this._createStack();
+    this.loadMusic();
+    this.updateScore();
+}
+
+Game.prototype.updateScore = function()
+{
+    if(this.scoreText==null)
+    {
+        this.scoreText = new BABYLON.GUI.TextBlock();
+        this.scoreText.text = String(this.gameScore);
+        this.scoreText.color = "white";
+        this.scoreText.fontSize = 100;
+        this.scoreText.top = "-300px";
+        this.advancedTexture.addControl(this.scoreText);    
+    }
+    else
+    {
+        this.scoreText.text = String(this.gameScore);
+    }
 }
 
 Game.prototype.createParticles = function()
@@ -259,6 +300,8 @@ Game.prototype.checkStack = function()
 
     // this.currentStack.position = new BABYLON.Vector3(1,1,1);
 
+    this.gameScore++;
+    this.updateScore();
     this.currentStack = this._createStack();
 }
 
@@ -334,8 +377,30 @@ Game.prototype.animateGameOver = function()
         {
             this.camera.fov += 0.001;
         } 
+        else
+        {
+            var text1 = new BABYLON.GUI.TextBlock();
+            text1.text = "Game Over";
+            text1.color = "white";
+            text1.fontSize = 75;
+            text1.top = "0px";
+            this.advancedTexture.addControl(text1);  
+            
+            var button1 = BABYLON.GUI.Button.CreateSimpleButton("but1", "RESTART");
+            button1.width = "300px"
+            button1.height = "80px";
+            button1.color = "white";
+            button1.top = "200px";
+            // button1.cornerRadius = 20;
+            button1.background = "#f67e7d";
+            button1.onPointerUpObservable.add(function() {
+                RestartScene();
+            });
+            this.advancedTexture.addControl(button1);    
+        }
     }
 }
+
 
 Game.prototype._createStack = function()
 {
@@ -472,11 +537,16 @@ Game.prototype._playZAnimation = function(currentStack)
 
 Game.prototype.loadMusic = function()
 {
-    var music = new BABYLON.Sound("Music", "audio/bgm.mp3", this.scene, null, {
+    if(this.bgm!=null)
+        this.bgm.stop();
+    var music = new BABYLON.Sound("Music", "audio/bgm.mp3", this.scene, function(){
+        music.play();
+    }, {
         loop: true,
-        autoplay: true
+        autoplay: false
       });
 
+      this.bgm = music;
     this.fallSFX = new BABYLON.Sound("fallSfx", "audio/fall.wav", this.scene);
     this.stackSFX = new BABYLON.Sound("stackSfx", "audio/stack.wav", this.scene);
 }
