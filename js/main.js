@@ -110,6 +110,7 @@ Game.prototype._initScene = function(engine)
 
     this.camera = new BABYLON.FreeCamera("camera", new BABYLON.Vector3(2, 1, -2), scene);
     this.camera.setTarget(BABYLON.Vector3.Zero());
+    this.camera.fov = 1;
     // camera.rotation = new BABYLON.Vector3(Math.PI/3.5, 0, 0);
     // this.camera.attachControl(engine.getRenderingCanvas());
 
