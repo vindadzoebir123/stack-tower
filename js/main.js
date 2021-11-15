@@ -160,6 +160,7 @@ Game.prototype._initGame = function(){
     
     this.currentStack = this._createStack();
     this.createParticles();
+    this.loadMusic();
     // this.scene.onPointerDown = function(evt, pickInfo){
     //     // pickInfo.pickedMesh.renderOutline = true;
     //     // pickInfo.pickedMesh.outlineWidth = 0.05;
@@ -212,6 +213,7 @@ Game.prototype.checkStack = function()
             new BABYLON.Vector3(this.currentStack.scaling.x, this.currentStack.scaling.y, fallingBlock));
             this.currentStack.position = new BABYLON.Vector3(this.currentStack.position.x, this.currentStack.position.y, this.prevStack.position.z + (hangover/2));
             this.currentStack.scaling = new BABYLON.Vector3(this.currentStack.scaling.x, this.currentStack.scaling.y, newSize);
+            this.fallSFX.play();
             if(newSize<0)
             {
                 this.gameOver();
@@ -222,6 +224,7 @@ Game.prototype.checkStack = function()
         {
             this.currentStack.position = new BABYLON.Vector3(this.currentStack.position.x, this.currentStack.position.y, this.prevStack.position.z );
             this._showOutline();
+            this.stackSFX.play();
         }
     }
     else
@@ -239,6 +242,7 @@ Game.prototype.checkStack = function()
             new BABYLON.Vector3(fallingBlock, this.currentStack.scaling.y, this.currentStack.scaling.z));
             this.currentStack.position = new BABYLON.Vector3(this.prevStack.position.x + (hangover/2), this.currentStack.position.y, this.currentStack.position.z);
             this.currentStack.scaling = new BABYLON.Vector3(newSize, this.currentStack.scaling.y, this.currentStack.scaling.z);
+            this.fallSFX.play();
             if(newSize<0)
             {
                 this.gameOver();
@@ -249,6 +253,7 @@ Game.prototype.checkStack = function()
         {
             this.currentStack.position = new BABYLON.Vector3(this.prevStack.position.x, this.currentStack.position.y, this.currentStack.position.z);
             this._showOutline();
+            this.stackSFX.play();
         }
     }
 
@@ -465,4 +470,14 @@ Game.prototype._playZAnimation = function(currentStack)
     this.scene.beginAnimation(currentStack, 0, this.currentSpeed*4, true);
 }
 
+Game.prototype.loadMusic = function()
+{
+    var music = new BABYLON.Sound("Music", "audio/bgm.mp3", this.scene, null, {
+        loop: true,
+        autoplay: true
+      });
+
+    this.fallSFX = new BABYLON.Sound("fallSfx", "audio/fall.wav", this.scene);
+    this.stackSFX = new BABYLON.Sound("stackSfx", "audio/stack.wav", this.scene);
+}
 // new Game('renderCanvas');
