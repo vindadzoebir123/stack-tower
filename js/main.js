@@ -120,7 +120,7 @@ Game.prototype._initGame = function(){
     skyboxMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
     skyboxMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
 
-    this.skybox = BABYLON.Mesh.CreateBox("skyBox", 1000.0, this.scene);
+    this.skybox = BABYLON.Mesh.CreateBox("skyBox", 2000.0, this.scene);
     this.skybox.material = skyboxMaterial;
 
 
@@ -311,9 +311,11 @@ Game.prototype._createFallingCube = function(position, scaling)
 
 Game.prototype.gameOver = function()
 {
-    var distance = this.camera.position.y/-1;
+    var distance = (this.camera.position.y - 1)/1;
     
-    this.cameraPovTarget = Math.abs(this.camera.fov * distance);
+    this.cameraPovTarget = Math.abs(this.camera.fov + (distance/5));
+    // if(this.cameraPovTarget>2)
+    //     this.cameraPovTarget/2;
     this.gameOverStatus = true;
     this.currentStack.dispose();
     console.log("Camera pov target : " + this.cameraPovTarget + ", distance : " + distance);
